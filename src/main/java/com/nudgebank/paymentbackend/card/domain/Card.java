@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -37,4 +39,23 @@ public class Card {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private CardStatus status;
+
+    public boolean matchesExpiredYm(String inputExpiredYm) {
+        return Objects.equals(this.expiredYm, inputExpiredYm);
+    }
+
+    public boolean matchesPassword(String inputPassword) {
+        return Objects.equals(this.password, inputPassword);
+    }
+
+    public boolean isActive() {
+        return this.status == CardStatus.ACTIVE;
+    }
+
+    public boolean isExpired() {
+        YearMonth now = YearMonth.now();
+        YearMonth cardExpired = YearMonth.parse(this.expiredYm, EXPIRED_YM_FORMATTER);
+        return cardExpired.isBefore(now);
+    }
+
 }
