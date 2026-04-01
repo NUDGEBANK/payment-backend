@@ -47,10 +47,6 @@ public class Card {
         return Objects.equals(this.expiredYm, inputExpiredYm);
     }
 
-    public boolean matchesPassword(String inputPassword) {
-        return Objects.equals(this.password, inputPassword);
-    }
-
     public boolean isActive() {
         return this.status == CardStatus.ACTIVE;
     }

@@ -10,6 +10,7 @@ import com.nudgebank.paymentbackend.card.repository.CardRepository;
 import com.nudgebank.paymentbackend.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CardService {
 
     private final CardRepository cardRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public CardVerifyResponse verifyCard(CardVerifyRequest request) {
         Card card = cardRepository.findByCardNumber(request.getCardNumber())
@@ -27,7 +29,7 @@ public class CardService {
             throw new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED);
         }
 
-        if (!card.matchesPassword(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), card.getPassword())) {
             throw new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED);
         }
 
