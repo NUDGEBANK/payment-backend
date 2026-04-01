@@ -5,7 +5,9 @@ import com.nudgebank.paymentbackend.card.domain.CardStatus;
 import com.nudgebank.paymentbackend.card.dto.CardBalanceResponse;
 import com.nudgebank.paymentbackend.card.dto.CardVerifyRequest;
 import com.nudgebank.paymentbackend.card.dto.CardVerifyResponse;
+import com.nudgebank.paymentbackend.card.exception.CardErrorCode;
 import com.nudgebank.paymentbackend.card.repository.CardRepository;
+import com.nudgebank.paymentbackend.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,30 +21,30 @@ public class CardService {
 
     public CardVerifyResponse verifyCard(CardVerifyRequest request) {
         Card card = cardRepository.findByCardNumber(request.getCardNumber())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드입니다."));
+                .orElseThrow(() -> new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED));
 
         if (!card.matchesExpiredYm(request.getExpiredYm())) {
-            throw new IllegalArgumentException("카드 유효기간이 일치하지 않습니다.");
+            throw new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED);
         }
 
         if (!card.matchesPassword(request.getPassword())) {
-            throw new IllegalArgumentException("카드 비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED);
         }
 
         if (!card.isActive()) {
-            throw new IllegalStateException("사용할 수 없는 카드 상태입니다. status=" + card.getStatus());
+            throw new BusinessException(CardErrorCode.CARD_BLOCKED);
         }
 
         if (card.isExpired()) {
-            throw new IllegalStateException("유효기간이 만료된 카드입니다.");
+            throw new BusinessException(CardErrorCode.CARD_EXPIRED);
         }
 
-        return new CardVerifyResponse(card.getId(), true, "카드 인증에 성공했습니다.");
+        return new CardVerifyResponse(card.getId(), true, "Card verification succeeded.");
     }
 
     public CardBalanceResponse getCardBalance(Long cardId) {
         Card card = cardRepository.findWithAccountById(cardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카드입니다."));
+                .orElseThrow(() -> new BusinessException(CardErrorCode.CARD_NOT_FOUND));
 
         validateCardUsable(card);
 
@@ -55,12 +57,11 @@ public class CardService {
 
     private void validateCardUsable(Card card) {
         if (card.getStatus() != CardStatus.ACTIVE) {
-            throw new IllegalStateException("사용할 수 없는 카드 상태입니다. status=" + card.getStatus());
+            throw new BusinessException(CardErrorCode.CARD_BLOCKED);
         }
 
         if (card.isExpired()) {
-            throw new IllegalStateException("유효기간이 만료된 카드입니다.");
+            throw new BusinessException(CardErrorCode.CARD_EXPIRED);
         }
     }
-
 }
