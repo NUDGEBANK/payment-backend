@@ -51,10 +51,6 @@ public class Card {
         return Objects.equals(this.password, inputPassword);
     }
 
-    public boolean matchesCvc(String inputCvc) {
-        return Objects.equals(this.cvc, inputCvc);
-    }
-
     public boolean isActive() {
         return this.status == CardStatus.ACTIVE;
     }

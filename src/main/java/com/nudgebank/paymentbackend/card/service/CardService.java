@@ -31,10 +31,6 @@ public class CardService {
             throw new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED);
         }
 
-        if (!card.matchesCvc(request.getCvc())) {
-            throw new BusinessException(CardErrorCode.CARD_VERIFICATION_FAILED);
-        }
-
         if (!card.isActive()) {
             throw new BusinessException(CardErrorCode.CARD_BLOCKED);
         }
