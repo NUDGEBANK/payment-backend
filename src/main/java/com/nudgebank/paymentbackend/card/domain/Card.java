@@ -40,12 +40,19 @@ public class Card {
     @Column(name = "status", length = 20, nullable = false)
     private CardStatus status;
 
+    @Column(name = "cvc", length = 3, nullable = false)
+    private String cvc;
+
     public boolean matchesExpiredYm(String inputExpiredYm) {
         return Objects.equals(this.expiredYm, inputExpiredYm);
     }
 
     public boolean matchesPassword(String inputPassword) {
         return Objects.equals(this.password, inputPassword);
+    }
+
+    public boolean matchesCvc(String inputCvc) {
+        return Objects.equals(this.cvc, inputCvc);
     }
 
     public boolean isActive() {

@@ -14,4 +14,7 @@ public class CardVerifyRequest {
 
     @NotBlank
     private String password;
+
+    @NotBlank
+    private String cvc;
 }
