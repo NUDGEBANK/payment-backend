@@ -1,6 +1,7 @@
 package com.nudgebank.paymentbackend.category.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,5 +28,6 @@ public class Market {
     private String marketName;
 
     @OneToMany(mappedBy = "market", fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     private List<MarketMenu> menus = new ArrayList<>();
 }
