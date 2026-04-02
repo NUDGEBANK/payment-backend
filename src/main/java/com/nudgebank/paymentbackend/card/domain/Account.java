@@ -1,15 +1,20 @@
 package com.nudgebank.paymentbackend.card.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Entity
 @Getter
 @Table(name = "account")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Account {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "account_id")
@@ -27,9 +32,15 @@ public class Account {
     @Column(name = "balance", precision = 15, scale = 2, nullable = false)
     private BigDecimal balance;
 
-    @Column(name = "account_created_at")
-    private OffsetDateTime createdAt;
+    @Column(name = "opened_at")
+    private OffsetDateTime openedAt;
 
-    @Column(name = "account_type", length = 20)
-    private String accountType;
+    @Column(name = "protected_balance")
+    private Long protectedBalance;
+
+    public void withdraw(BigDecimal amount) {
+        Objects.requireNonNull(amount, "amount must not be null");
+        this.balance = this.balance.subtract(amount);
+    }
+
 }
