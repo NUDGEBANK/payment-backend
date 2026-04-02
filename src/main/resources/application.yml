@@ -19,3 +19,8 @@ spring:
 
 server:
   port: 9999
+
+app:
+  cors:
+    allowed-origin-patterns:
+      - ${ALLOW_URL1}

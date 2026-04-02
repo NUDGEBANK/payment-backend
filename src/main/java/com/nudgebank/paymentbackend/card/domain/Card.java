@@ -13,7 +13,7 @@ import java.util.Objects;
 @Table(name = "card")
 public class Card {
 
-    private static final DateTimeFormatter EXPIRED_YM_FORMATTER = DateTimeFormatter.ofPattern("yy/MM");
+    private static final DateTimeFormatter EXPIRED_YM_FORMATTER = DateTimeFormatter.ofPattern("MM/yy");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,7 @@ public class Card {
     private OffsetDateTime createdAt;
 
     @Column(name = "expired_ym", length = 5, nullable = false)
-    private String expiredYm; // 예: 27/03
+    private String expiredYm; // 예: 03/27
 
     @Column(name = "password", length = 100, nullable = false)
     private String password;

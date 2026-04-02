@@ -68,7 +68,7 @@
 
 요청 필드:
 - `cardNumber`: 카드 번호, 필수
-- `expiredYm`: `yy/MM` 형식, 필수
+- `expiredYm`: `MM/YY` 형식, 필수
 - `password`: 카드 비밀번호, 필수
 
 성공 응답: `200 OK`
