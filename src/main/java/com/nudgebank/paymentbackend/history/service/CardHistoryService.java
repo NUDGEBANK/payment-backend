@@ -19,13 +19,16 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CardHistoryService {
+
+    private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
 
     private final CardRepository cardRepository;
     private final CardHistoryRepository cardHistoryRepository;
@@ -34,19 +37,18 @@ public class CardHistoryService {
         Card card = cardRepository.findWithAccountById(cardId)
                 .orElseThrow(() -> new BusinessException(CardErrorCode.CARD_NOT_FOUND));
 
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = YearMonth.now(SERVICE_ZONE);
         YearMonth previousMonth = currentMonth.minusMonths(1);
 
-        OffsetDateTime currentMonthStart = currentMonth.atDay(1).atStartOfDay().atOffset(ZoneOffset.ofHours(9));
-        OffsetDateTime nextMonthStart = currentMonth.plusMonths(1).atDay(1).atStartOfDay().atOffset(ZoneOffset.ofHours(9));
-        OffsetDateTime previousMonthStart = previousMonth.atDay(1).atStartOfDay().atOffset(ZoneOffset.ofHours(9));
-        OffsetDateTime currentMonthBoundary = currentMonth.atDay(1).atStartOfDay().atOffset(ZoneOffset.ofHours(9));
+        OffsetDateTime currentMonthStart = atStartOfMonth(currentMonth);
+        OffsetDateTime nextMonthStart = atStartOfMonth(currentMonth.plusMonths(1));
+        OffsetDateTime previousMonthStart = atStartOfMonth(previousMonth);
 
         BigDecimal currentMonthSpending = cardHistoryRepository.sumAmountByCardIdAndPeriod(
                 cardId, currentMonthStart, nextMonthStart
         );
         BigDecimal previousMonthSpending = cardHistoryRepository.sumAmountByCardIdAndPeriod(
-                cardId, previousMonthStart, currentMonthBoundary
+                cardId, previousMonthStart, currentMonthStart
         );
 
         BigDecimal changeRatePercent = calculateChangeRate(currentMonthSpending, previousMonthSpending);
@@ -71,8 +73,8 @@ public class CardHistoryService {
 
         DateRange dateRange = resolveDateRange(periodType, startDate, endDate);
 
-        OffsetDateTime start = dateRange.startDate().atStartOfDay().atOffset(ZoneOffset.ofHours(9));
-        OffsetDateTime endExclusive = dateRange.endDate().plusDays(1).atStartOfDay().atOffset(ZoneOffset.ofHours(9));
+        OffsetDateTime start = dateRange.startDate().atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
+        OffsetDateTime endExclusive = dateRange.endDate().plusDays(1).atStartOfDay(SERVICE_ZONE).toOffsetDateTime();
 
         List<CardTransactionItemResponse> items = cardHistoryRepository.findTransactionItemsByCardIdAndPeriod(
                 cardId, start, endExclusive
@@ -99,8 +101,13 @@ public class CardHistoryService {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
+    private OffsetDateTime atStartOfMonth(YearMonth yearMonth) {
+        ZonedDateTime zonedDateTime = yearMonth.atDay(1).atStartOfDay(SERVICE_ZONE);
+        return zonedDateTime.toOffsetDateTime();
+    }
+
     private DateRange resolveDateRange(HistoryPeriodType periodType, LocalDate startDate, LocalDate endDate) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(SERVICE_ZONE);
 
         return switch (periodType) {
             case ONE_MONTH -> new DateRange(today.minusMonths(1), today);
