@@ -26,7 +26,7 @@ jobs:
         run: >
           ssh student@192.168.0.215 
           "cd nudgepayment && 
-          docker-compose pull paymentbackend && 
-          docker-compose up -d paymentbackend && 
+          docker compose pull paymentbackend && 
+          docker compose up -d paymentbackend && 
           docker image prune -f"
           
