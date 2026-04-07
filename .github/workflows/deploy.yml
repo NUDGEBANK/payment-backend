@@ -23,10 +23,10 @@ jobs:
 
       # 2. 아카데미 서버 접속 및 업데이트 (노트북 -> 서버)
       - name: SSH to Academy Server and Update
-        run: |
-          ssh student@192.168.0.215 << 'EOF'
-            cd nudgepayment
-            docker-compose pull paymentbackend
-            docker-compose up -d paymentbackend
-            docker image prune -f # 안 쓰는 옛날 이미지 삭제(용량 확보)
-          EOF
+        run: >
+          ssh student@192.168.0.215 
+          "cd nudgepayment && 
+          docker-compose pull paymentbackend && 
+          docker-compose up -d paymentbackend && 
+          docker image prune -f"
+          
