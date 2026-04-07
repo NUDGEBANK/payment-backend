@@ -2,7 +2,7 @@ spring:
   config:
     import: optional:classpath:application-local.yml
   application:
-    name: bank-backend
+    name: payment-backend
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/nudgebank}
     username: ${DB_USERNAME:postgres}
@@ -12,10 +12,15 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
 
 server:
   port: 9999
+
+app:
+  cors:
+    allowed-origin-patterns:
+      - ${ALLOW_URL1:https://*.ngrok-free.dev}
