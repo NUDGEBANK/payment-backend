@@ -1,0 +1,32 @@
+name: Deploy to Academy Server
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 push될 때 실행
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted # 방금 설정한 노트북(Runner)에서 실행한다는 뜻!
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. Docker 빌드 및 Docker Hub 푸시 (노트북에서 수행)
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/nudge-backend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/nudge-backend:latest
+
+      # 2. 아카데미 서버 접속 및 업데이트 (노트북 -> 서버)
+      - name: SSH to Academy Server and Update
+        run: |
+          ssh student@192.168.0.215 << 'EOF'
+            cd nudgepayment
+            docker-compose pull paymentbackend
+            docker-compose up -d paymentbackend
+            docker image prune -f # 안 쓰는 옛날 이미지 삭제(용량 확보)
+          EOF
