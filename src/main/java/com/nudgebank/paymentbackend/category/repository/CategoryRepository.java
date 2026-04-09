@@ -12,6 +12,7 @@ public interface CategoryRepository extends JpaRepository<MarketCategory, Long> 
             select distinct c
             from MarketCategory c
             left join fetch c.markets m
+            where c.categoryId <= 16
             order by c.categoryId, m.marketId
             """)
     List<MarketCategory> findAllWithMarketsAndMenus();
