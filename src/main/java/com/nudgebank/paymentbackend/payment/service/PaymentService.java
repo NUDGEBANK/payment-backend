@@ -6,24 +6,27 @@ import com.nudgebank.paymentbackend.card.domain.CardStatus;
 import com.nudgebank.paymentbackend.card.exception.CardErrorCode;
 import com.nudgebank.paymentbackend.card.repository.CardRepository;
 import com.nudgebank.paymentbackend.category.domain.Market;
+import com.nudgebank.paymentbackend.common.client.BankClient;
 import com.nudgebank.paymentbackend.common.exception.BusinessException;
 import com.nudgebank.paymentbackend.payment.domain.CardTransaction;
 import com.nudgebank.paymentbackend.payment.domain.QrPaymentRequest;
-import com.nudgebank.paymentbackend.payment.dto.CreateQrPaymentRequest;
-import com.nudgebank.paymentbackend.payment.dto.CreateQrPaymentResponse;
-import com.nudgebank.paymentbackend.payment.dto.PaymentDetailResponse;
-import com.nudgebank.paymentbackend.payment.dto.PaymentStatusResponse;
+import com.nudgebank.paymentbackend.payment.dto.*;
 import com.nudgebank.paymentbackend.payment.exception.PaymentErrorCode;
 import com.nudgebank.paymentbackend.payment.repository.CardTransactionRepository;
 import com.nudgebank.paymentbackend.payment.repository.MarketRepository;
 import com.nudgebank.paymentbackend.payment.repository.QrPaymentRequestRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -35,6 +38,8 @@ public class PaymentService {
     private final CardTransactionRepository cardTransactionRepository;
     private final CardRepository cardRepository;
     private final MarketRepository marketRepository;
+
+    private final BankClient bankClient;
 
     @Transactional
     public CreateQrPaymentResponse createQrPayment(CreateQrPaymentRequest request) {
@@ -85,7 +90,28 @@ public class PaymentService {
 
         payment.markApproved(now);
         payment.getCard().getAccount().withdraw(payment.getPaymentAmount());
-        cardTransactionRepository.save(CardTransaction.from(payment, now));
+        CardTransaction transaction = CardTransaction.from(payment, now);
+        CardTransaction savedTransaction = cardTransactionRepository.save(transaction);
+
+        Long memberId = payment.getCard().getAccount().getMemberId();
+        AutoRepaymentRequest signal = new AutoRepaymentRequest(
+                memberId, savedTransaction.getTransactionId()
+        );
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                bankClient.notifyPayment(signal);
+                            } catch (Exception e) {
+                                log.error("결제는 성공했지만 bank 서버와 통신 실패 : {}", e.getMessage());
+                            }
+                        });
+                    }
+                }
+        );
 
         return new PaymentStatusResponse(payment.getQrId(), payment.getStatus(), now, "Payment approved.");
     }

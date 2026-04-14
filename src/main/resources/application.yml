@@ -18,9 +18,13 @@ spring:
         format_sql: true
 
 server:
-  port: 9999
+  port: 9090
 
 app:
   cors:
     allowed-origin-patterns:
       - ${ALLOW_URL1:https://*.ngrok-free.dev}
+
+bank:
+  server:
+    url: ${BANK_SERVER_URL}
