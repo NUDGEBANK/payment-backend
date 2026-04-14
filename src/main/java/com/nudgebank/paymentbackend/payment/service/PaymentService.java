@@ -24,6 +24,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -101,11 +102,13 @@ public class PaymentService {
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        try {
-                            bankClient.notifyPayment(signal);
-                        } catch (Exception e) {
-                            log.error("결제는 성공했지만 bank 서버와 통신 실패 : {}", e.getMessage());
-                        }
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                bankClient.notifyPayment(signal);
+                            } catch (Exception e) {
+                                log.error("결제는 성공했지만 bank 서버와 통신 실패 : {}", e.getMessage());
+                            }
+                        });
                     }
                 }
         );
