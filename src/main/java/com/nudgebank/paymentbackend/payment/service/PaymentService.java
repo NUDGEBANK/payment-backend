@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Service
@@ -40,6 +41,7 @@ public class PaymentService {
     private final MarketRepository marketRepository;
 
     private final BankClient bankClient;
+    private final Executor paymentNotifyExecutor;
 
     @Transactional
     public CreateQrPaymentResponse createQrPayment(CreateQrPaymentRequest request) {
@@ -108,7 +110,7 @@ public class PaymentService {
                             } catch (Exception e) {
                                 log.error("결제는 성공했지만 bank 서버와 통신 실패 : {}", e.getMessage());
                             }
-                        });
+                        }, paymentNotifyExecutor);
                     }
                 }
         );
