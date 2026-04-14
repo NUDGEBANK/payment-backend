@@ -27,4 +27,4 @@ app:
 
 bank:
   server:
-    url: http://localhost:9999
+    url: ${BANK_SERVER_URL}
