@@ -35,9 +35,6 @@ public class Account {
     @Column(name = "opened_at")
     private OffsetDateTime openedAt;
 
-    @Column(name = "protected_balance")
-    private Long protectedBalance;
-
     public void withdraw(BigDecimal amount) {
         Objects.requireNonNull(amount, "amount must not be null");
         this.balance = this.balance.subtract(amount);
