@@ -17,6 +17,10 @@ public interface CardHistoryRepository extends JpaRepository<CardTransaction, Lo
             where ct.card.id = :cardId
               and ct.transactionDatetime >= :start
               and ct.transactionDatetime < :end
+              and (
+                  ct.menuName is null
+                  or ct.menuName not in ('넛지 대출', '자기계발 대출')
+              )
             """)
     BigDecimal sumAmountByCardIdAndPeriod(Long cardId, OffsetDateTime start, OffsetDateTime end);
 
